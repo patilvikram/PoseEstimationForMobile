@@ -17,33 +17,42 @@ package com.edvard.poseestimation
 
 import android.app.Activity
 import android.util.Log
-
 import org.opencv.core.CvType
 import org.opencv.core.Mat
 import org.opencv.core.Size
 import org.opencv.imgproc.Imgproc
-
-import java.io.IOException
+import java.nio.ByteBuffer
+import java.util.*
 
 /**
  * Pose Estimator
  */
 class ImageClassifierFloatInception private constructor(
-    activity: Activity,
-    imageSizeX: Int,
-    imageSizeY: Int,
-    private val outputW: Int,
-    private val outputH: Int,
-    modelPath: String,
-    numBytesPerChannel: Int = 4 // a 32bit float value requires 4 bytes
-  ) : ImageClassifier(activity, imageSizeX, imageSizeY, modelPath, numBytesPerChannel) {
+        activity: Activity,
+        imageSizeX: Int,
+        imageSizeY: Int,
+        private val outputW: Int,
+        private val outputH: Int,
+        modelPath: String,
+        numBytesPerChannel: Int = 4 // a 32bit float value requires 4 bytes
+) : ImageClassifier(activity, imageSizeX, imageSizeY, modelPath, numBytesPerChannel) {
 
   /**
    * An array to hold inference results, to be feed into Tensorflow Lite as outputs.
    * This isn't part of the super class, because we need a primitive array here.
    */
   private val heatMapArray: Array<Array<Array<FloatArray>>> =
-    Array(1) { Array(outputW) { Array(outputH) { FloatArray(14) } } }
+          Array(1) { Array(outputW) { Array(outputH) { FloatArray(15) } } }
+  /*private val heatMapArray1: Array<Array<Array<FloatArray>>> =
+          Array(1) { Array(outputW) { Array(outputH) { FloatArray(15) } } }
+  private val heatMapArray2: Array<Array<Array<FloatArray>>> =
+          Array(1) { Array(outputW) { Array(outputH) { FloatArray(15) } } }
+  private val heatMapArray3: Array<Array<Array<FloatArray>>> =
+          Array(1) { Array(outputW) { Array(outputH) { FloatArray(15) } } }
+  private val heatMapArray4: Array<Array<Array<FloatArray>>> =
+          Array(1) { Array(outputW) { Array(outputH) { FloatArray(15) } } }
+  val output_array:HashMap<Int,Array<Array<Array<FloatArray>>>> = HashMap<Int,Array<Array<Array<FloatArray>>>>()*/
+
 
   private var mMat: Mat? = null
 
@@ -56,12 +65,12 @@ class ImageClassifierFloatInception private constructor(
 
   override fun getProbability(labelIndex: Int): Float {
     //    return heatMapArray[0][labelIndex];
-    return 0f
+    return 0.95f
   }
 
   override fun setProbability(
-    labelIndex: Int,
-    value: Number
+          labelIndex: Int,
+          value: Number
   ) {
     //    heatMapArray[0][labelIndex] = value.floatValue();
   }
@@ -71,10 +80,17 @@ class ImageClassifierFloatInception private constructor(
   }
 
   override fun runInference() {
+    /*output_array.put(0,heatMapArray)
+    output_array.put(1,heatMapArray1)
+    output_array.put(2,heatMapArray2)
+    output_array.put(3,heatMapArray3)
+    output_array.put(4,heatMapArray4)
+    val inputArray: Array<ByteBuffer?> = arrayOf<ByteBuffer?>(imgData)*/
     tflite?.run(imgData!!, heatMapArray)
+    //tflite?.runForMultipleInputsOutputs(inputArray, output_array as Map<Int, Array<Array<Array<FloatArray>>>>);
 
     if (mPrintPointArray == null)
-      mPrintPointArray = Array(2) { FloatArray(14) }
+      mPrintPointArray = Array(2) { FloatArray(24) }
 
     if (!CameraActivity.isOpenCVInit)
       return
@@ -82,13 +98,29 @@ class ImageClassifierFloatInception private constructor(
     // Gaussian Filter 5*5
     if (mMat == null)
       mMat = Mat(outputW, outputH, CvType.CV_32F)
-
     val tempArray = FloatArray(outputW * outputH)
     val outTempArray = FloatArray(outputW * outputH)
+    //Log.i("array1", (heatMapArray[0]?.get(0)?.get(y)?.get(x)?.get(i)).toString())
+    /*for (i in 0..13) {
+      var index = 0
+      for (x in 0 until outputW) {
+        for (y in 0 until outputH) {
+          tempArray[index] = output_array[2]?.get(0)?.get(y)?.get(x)?.get(i)?.toFloat()!!
+          /*Log.i("array1", (output_array[0]?.get(0)?.get(y)?.get(x)?.get(i)).toString())
+          Log.i("array2", (output_array[1]?.get(0)?.get(y)?.get(x)?.get(i)).toString())
+          Log.i("array3", (output_array[2]?.get(0)?.get(y)?.get(x)?.get(i)).toString())
+          Log.i("array4", (output_array[3]?.get(0)?.get(y)?.get(x)?.get(i)).toString())*/
+          index++
+        }
+      }
+    }*/
+
     for (i in 0..13) {
       var index = 0
       for (x in 0 until outputW) {
         for (y in 0 until outputH) {
+          //Log.i("array1", heatMapArray[0][y][x][i].toString())
+          //Log.i("array1", (heatMapArray[0]?.get(0)?.get(y)?.get(x)?.get(i)).toString())
           tempArray[index] = heatMapArray[0][y][x][i]
           index++
         }
@@ -115,7 +147,7 @@ class ImageClassifierFloatInception private constructor(
       }
 
       if (max == 0f) {
-        mPrintPointArray = Array(2) { FloatArray(14) }
+        mPrintPointArray = Array(2) { FloatArray(24) }
         return
       }
 
@@ -126,9 +158,9 @@ class ImageClassifierFloatInception private constructor(
   }
 
   private operator fun get(
-    x: Int,
-    y: Int,
-    arr: FloatArray
+          x: Int,
+          y: Int,
+          arr: FloatArray
   ): Float {
     return if (x < 0 || y < 0 || x >= outputW || y >= outputH) -1f else arr[x * outputW + y]
   }
@@ -147,21 +179,21 @@ class ImageClassifierFloatInception private constructor(
      * color channel value.
      */
     fun create(
-      activity: Activity,
-      imageSizeX: Int = 192,
-      imageSizeY: Int = 192,
-      outputW: Int = 96,
-      outputH: Int = 96,
-      modelPath: String = "model.tflite",
-      numBytesPerChannel: Int = 4
+            activity: Activity,
+            imageSizeX: Int = 192,
+            imageSizeY: Int = 192,
+            outputW: Int = 96,
+            outputH: Int = 96,
+            modelPath: String = "pose_mobilenet.tflite",
+            numBytesPerChannel: Int = 4
     ): ImageClassifierFloatInception =
-      ImageClassifierFloatInception(
-          activity,
-          imageSizeX,
-          imageSizeY,
-          outputW,
-          outputH,
-          modelPath,
-          numBytesPerChannel)
+            ImageClassifierFloatInception(
+                    activity,
+                    imageSizeX,
+                    imageSizeY,
+                    outputW,
+                    outputH,
+                    modelPath,
+                    numBytesPerChannel)
   }
 }

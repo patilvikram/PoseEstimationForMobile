@@ -15,12 +15,15 @@
 
 package com.edvard.poseestimation
 
+import android.annotation.TargetApi
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Paint.Style.FILL
 import android.graphics.PointF
+import android.os.Build
 import android.util.AttributeSet
+import android.util.Log
 import android.view.View
 import java.util.ArrayList
 
@@ -28,6 +31,7 @@ import java.util.ArrayList
  * Created by edvard on 18-3-23.
  */
 
+@TargetApi(Build.VERSION_CODES.M)
 class DrawView : View {
 
   private var mRatioWidth = 0
@@ -42,21 +46,21 @@ class DrawView : View {
   private var mImgHeight: Int = 0
 
   private val mColorArray = intArrayOf(
-      resources.getColor(R.color.color_top, null),
-      resources.getColor(R.color.color_neck, null),
-      resources.getColor(R.color.color_l_shoulder, null),
-      resources.getColor(R.color.color_l_elbow, null),
-      resources.getColor(R.color.color_l_wrist, null),
-      resources.getColor(R.color.color_r_shoulder, null),
-      resources.getColor(R.color.color_r_elbow, null),
-      resources.getColor(R.color.color_r_wrist, null),
-      resources.getColor(R.color.color_l_hip, null),
-      resources.getColor(R.color.color_l_knee, null),
-      resources.getColor(R.color.color_l_ankle, null),
-      resources.getColor(R.color.color_r_hip, null),
-      resources.getColor(R.color.color_r_knee, null),
-      resources.getColor(R.color.color_r_ankle, null),
-      resources.getColor(R.color.color_background, null)
+          resources.getColor(R.color.color_top, null),
+          resources.getColor(R.color.color_neck, null),
+          resources.getColor(R.color.color_l_shoulder, null),
+          resources.getColor(R.color.color_l_elbow, null),
+          resources.getColor(R.color.color_l_wrist, null),
+          resources.getColor(R.color.color_r_shoulder, null),
+          resources.getColor(R.color.color_r_elbow, null),
+          resources.getColor(R.color.color_r_wrist, null),
+          resources.getColor(R.color.color_l_hip, null),
+          resources.getColor(R.color.color_l_knee, null),
+          resources.getColor(R.color.color_l_ankle, null),
+          resources.getColor(R.color.color_r_hip, null),
+          resources.getColor(R.color.color_r_knee, null),
+          resources.getColor(R.color.color_r_ankle, null),
+          resources.getColor(R.color.color_background, null)
   )
 
   private val circleRadius: Float by lazy {
@@ -74,19 +78,19 @@ class DrawView : View {
   constructor(context: Context) : super(context)
 
   constructor(
-    context: Context,
-    attrs: AttributeSet?
+          context: Context,
+          attrs: AttributeSet?
   ) : super(context, attrs)
 
   constructor(
-    context: Context,
-    attrs: AttributeSet?,
-    defStyleAttr: Int
+          context: Context,
+          attrs: AttributeSet?,
+          defStyleAttr: Int
   ) : super(context, attrs, defStyleAttr)
 
   fun setImgSize(
-    width: Int,
-    height: Int
+          width: Int,
+          height: Int
   ) {
     mImgWidth = width
     mImgHeight = height
@@ -98,8 +102,8 @@ class DrawView : View {
    * @param point 2*14
    */
   fun setDrawPoint(
-    point: Array<FloatArray>,
-    ratio: Float
+          point: Array<FloatArray>,
+          ratio: Float
   ) {
     mDrawPoint.clear()
 
@@ -110,6 +114,7 @@ class DrawView : View {
       tempY = point[1][i] / ratio / mRatioY
       mDrawPoint.add(PointF(tempX, tempY))
     }
+    //Log.i("Test",mDrawPoint.toString())
   }
 
   /**
@@ -121,8 +126,8 @@ class DrawView : View {
    * @param height Relative vertical size
    */
   fun setAspectRatio(
-    width: Int,
-    height: Int
+          width: Int,
+          height: Int
   ) {
     if (width < 0 || height < 0) {
       throw IllegalArgumentException("Size cannot be negative.")
@@ -138,21 +143,46 @@ class DrawView : View {
     var prePointF: PointF? = null
     mPaint.color = 0xff6fa8dc.toInt()
     val p1 = mDrawPoint[1]
+    val p2 = mDrawPoint[2]
+    val p3 = mDrawPoint[3]
+    val p4 = mDrawPoint[4]
+    val p5 = mDrawPoint[5]
+    val p6 = mDrawPoint[6]
+    val p7 = mDrawPoint[7]
+    val p8 = mDrawPoint[8]
+    val p9 = mDrawPoint[9]
+    val p10 = mDrawPoint[10]
+    val p11 = mDrawPoint[11]
+    val p12 = mDrawPoint[12]
+    val p13 = mDrawPoint[13]
+    //Log.i("Test","Inside drawing loop")
     for ((index, pointF) in mDrawPoint.withIndex()) {
       if (index == 1) continue
       when (index) {
-      //0-1
+        //0-1
         0 -> {
           canvas.drawLine(pointF.x, pointF.y, p1.x, p1.y, mPaint)
         }
-      // 1-2, 1-5, 1-8, 1-11
-        2, 5, 8, 11 -> {
+        // 1-2, 1-5, 1-8, 1-11 default sequence later changed to work with new model
+        2, 3 -> {
           canvas.drawLine(p1.x, p1.y, pointF.x, pointF.y, mPaint)
+          //canvas.drawLine(p2.x, p2.y, p4.x,p4.y, mPaint)
         }
         else -> {
           if (prePointF != null) {
             mPaint.color = 0xff6fa8dc.toInt()
-            canvas.drawLine(prePointF.x, prePointF.y, pointF.x, pointF.y, mPaint)
+            //canvas.drawLine(prePointF.x, prePointF.y, pointF.x, pointF.y, mPaint)
+            canvas.drawLine(p2.x, p2.y, p4.x,p4.y, mPaint)
+            canvas.drawLine(p3.x, p3.y, p5.x,p5.y, mPaint)
+            canvas.drawLine(p5.x, p5.y, p7.x,p7.y, mPaint)
+            canvas.drawLine(p4.x, p4.y, p6.x,p6.y, mPaint)
+            canvas.drawLine(p2.x, p2.y, p8.x,p8.y, mPaint)
+            canvas.drawLine(p3.x, p3.y, p9.x,p9.y, mPaint)
+            canvas.drawLine(p8.x, p8.y, p10.x,p10.y, mPaint)
+            canvas.drawLine(p8.x, p8.y, p9.x,p9.y, mPaint)
+            canvas.drawLine(p9.x, p9.y, p11.x,p11.y, mPaint)
+            canvas.drawLine(p11.x, p11.y, p13.x,p13.y, mPaint)
+            canvas.drawLine(p10.x, p10.y, p12.x,p12.y, mPaint)
           }
         }
       }
@@ -166,8 +196,8 @@ class DrawView : View {
   }
 
   override fun onMeasure(
-    widthMeasureSpec: Int,
-    heightMeasureSpec: Int
+          widthMeasureSpec: Int,
+          heightMeasureSpec: Int
   ) {
     super.onMeasure(widthMeasureSpec, heightMeasureSpec)
 
